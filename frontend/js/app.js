@@ -1,7 +1,7 @@
 $(function () {
   $("#run").on("click", function () {
     $("#output").text("Running...");
-    $.get("/api/run-cobol.cgi")
+    $.get("/api/run-cobol")
       .done(function (data) {
         try {
           if (typeof data === "string") data = JSON.parse(data);

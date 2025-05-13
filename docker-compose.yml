@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   apache:
     build: ./apache
@@ -9,8 +11,8 @@ services:
         condition: service_started
     volumes:
       - ./frontend:/usr/local/apache2/htdocs:ro
-      - ./bin:/usr/local/apache2/cgi-bin:ro
       - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - cobol_socket:/var/run/cobol
     ports:
       - "3000:80"
     environment:
@@ -19,18 +21,15 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - COBOL_SERVER_HOST=${COBOL_SERVER_HOST}
-      - COBOL_SERVER_PORT=${COBOL_SERVER_PORT}
+
 
   cobol-server:
     build: ./cobol
     container_name: cobol-server
-    ports:
-      - "${COBOL_SERVER_PORT}:6000"
     volumes:
-      - ./cobol/main.cob:/work/main.cob:ro
+      - cobol_socket:/var/run/cobol
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "6000"]
+      test: ["CMD", "test", "-S", "/var/run/cobol/cobol.sock"]
       interval: 5s
       retries: 5
 
@@ -52,3 +51,4 @@ services:
 
 volumes:
   db_data:
+  cobol_socket:

@@ -22,11 +22,24 @@ tasks:
 
   build:
     desc: "全サービスをビルド"
-    deps: [build:apache, build:cobol, build:mysql]
+    deps: [build:cgi, build:apache, build:cobol, build:mysql]
+
+  re:mod:
+    desc: "Apacheコンテナ内で mod_cobol_server を再ビルド＆再インストール"
+    cmds:
+      - docker exec -w /usr/local/src apache make clean || true
+      - docker exec -w /usr/local/src apache make
+      - docker exec -w /usr/local/src apache make install
+      - docker exec apache apachectl -k graceful
 
   start:
     desc: "全サービスを起動"
     deps: [start:apache, start:cobol, start:mysql]
+
+  logs:
+    desc: "すべてのサービスのログを表示"
+    cmds:
+      - docker compose logs -f
 
   default:
     silent: true
@@ -47,36 +60,52 @@ tasks:
   build:apache:
     cmds:
       - docker compose build apache
+    ignore_error: true
 
   start:apache:
     cmds:
       - docker compose up -d apache
+    ignore_error: true
 
   re:apache:
     deps: [build:apache, start:apache]
 
-  # === cobol ===
+  logs:apache:
+    cmds:
+      - docker compose logs -f apache
 
+  # === cobol ===
   build:cobol:
     cmds:
       - docker compose build cobol-server
+    ignore_error: true
 
   start:cobol:
     cmds:
       - docker compose up -d cobol-server
+    ignore_error: true
 
   re:cobol:
     deps: [build:cobol, start:cobol]
 
-  # === mysql ===
+  logs:cobol:
+    cmds:
+      - docker compose logs -f cobol-server
 
+  # === mysql ===
   build:mysql:
     cmds:
       - echo "mysql uses image; no build needed"
+    ignore_error: true
 
   start:mysql:
     cmds:
       - docker compose up -d mysql
+    ignore_error: true
 
   re:mysql:
     deps: [start:mysql]
+
+  logs:mysql:
+    cmds:
+      - docker compose logs -f mysql
