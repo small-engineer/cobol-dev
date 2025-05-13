@@ -1,0 +1,3 @@
+/config/*.env
+.env
+db_data/

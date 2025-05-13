@@ -1,0 +1,54 @@
+services:
+  apache:
+    build: ./apache
+    container_name: apache
+    depends_on:
+      cobol-server:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+    volumes:
+      - ./frontend:/usr/local/apache2/htdocs:ro
+      - ./bin:/usr/local/apache2/cgi-bin:ro
+      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+    ports:
+      - "3000:80"
+    environment:
+      - DB_HOST=mysql
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - COBOL_SERVER_HOST=${COBOL_SERVER_HOST}
+      - COBOL_SERVER_PORT=${COBOL_SERVER_PORT}
+
+  cobol-server:
+    build: ./cobol
+    container_name: cobol-server
+    ports:
+      - "${COBOL_SERVER_PORT}:6000"
+    volumes:
+      - ./cobol/main.cob:/work/main.cob:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "6000"]
+      interval: 5s
+      retries: 5
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 5
+
+volumes:
+  db_data:

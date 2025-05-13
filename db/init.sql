@@ -1,0 +1,11 @@
+CREATE DATABASE IF NOT EXISTS run_log
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
+
+USE run_log;
+
+CREATE TABLE IF NOT EXISTS run_log (
+  id        INT AUTO_INCREMENT PRIMARY KEY,
+  run_time  DATETIME NOT NULL,
+  message   TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

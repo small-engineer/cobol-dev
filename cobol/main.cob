@@ -1,0 +1,10 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. MAIN.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 MSG PIC X(50) VALUE "Hello world".
+
+       PROCEDURE DIVISION.
+           DISPLAY MSG
+           STOP RUN.
