@@ -22,7 +22,7 @@ tasks:
 
   build:
     desc: "全サービスをビルド"
-    deps: [build:cgi, build:apache, build:cobol, build:mysql]
+    deps: [build:cgi, build:apache, build:cobol, build:postgres]
 
   re:mod:
     desc: "Apacheコンテナ内で mod_cobol_server を再ビルド＆再インストール"
@@ -34,7 +34,7 @@ tasks:
 
   start:
     desc: "全サービスを起動"
-    deps: [start:apache, start:cobol, start:mysql]
+    deps: [start:apache, start:cobol, start:postgres]
 
   logs:
     desc: "すべてのサービスのログを表示"
@@ -52,7 +52,7 @@ tasks:
         yellow="\033[0;33m"
         magenta="\033[0;35m"
         reset="\033[0m"
-        echo "${yellow}*${reset} ${green}task${reset}:${magenta}service${reset}  所定のserviceのみ起動 ${magenta}apache / cobol / mysql${reset} "
+        echo "${yellow}*${reset} ${green}task${reset}:${magenta}service${reset}  所定のserviceのみ起動 ${magenta}apache / cobol / postgres${reset} "
         echo ""
         '
 
@@ -92,20 +92,20 @@ tasks:
     cmds:
       - docker compose logs -f cobol-server
 
-  # === mysql ===
-  build:mysql:
+  # === postgres ===
+  build:postgres:
     cmds:
-      - echo "mysql uses image; no build needed"
+      - echo "postgres uses image; no build needed"
     ignore_error: true
 
-  start:mysql:
+  start:postgres:
     cmds:
-      - docker compose up -d mysql
+      - docker compose up -d postgres
     ignore_error: true
 
-  re:mysql:
-    deps: [start:mysql]
+  re:postgres:
+    deps: [start:postgres]
 
-  logs:mysql:
+  logs:postgres:
     cmds:
-      - docker compose logs -f mysql
+      - docker compose logs -f postgres
