@@ -1,6 +1,7 @@
 FROM httpd:2.4
 
 RUN apt-get update && \
+    apt-get install -y libutf8proc-dev && \
     apt-get install -y --no-install-recommends gcc apache2-dev make && \
     rm -rf /var/lib/apt/lists/*
 

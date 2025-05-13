@@ -3,7 +3,7 @@
 
        DATA DIVISION.
        WORKING-STORAGE SECTION.
-       01 MSG PIC X(50) VALUE "Hello world".
+       01 MSG PIC X(50) VALUE "こんにちは世界".
 
        PROCEDURE DIVISION.
            DISPLAY MSG

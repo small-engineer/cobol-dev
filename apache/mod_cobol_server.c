@@ -8,37 +8,49 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <utf8proc.h>
 
 #define COBOL_SOCK_PATH "/var/run/cobol/cobol.sock"
 #define BUFSIZE 4096
 
-static void safe_json_escape(out, in, maxlen)
+static void
+json_escape_utf8(out, in, max)
     char *out;
     const char *in;
-    size_t maxlen;
+    size_t max;
 {
-    size_t i, j = 0;
-    for (i = 0; in[i] && j < maxlen - 1; ++i) {
-        unsigned char c = (unsigned char)in[i];
-        if (j + 6 >= maxlen)
+    size_t j = 0;
+    const uint8_t *p = (const uint8_t *)in;
+
+    while (*p && j < max - 1) {
+        utf8proc_int32_t cp;
+        utf8proc_ssize_t len = utf8proc_iterate(p, -1, &cp);
+        if (len <= 0)
             break;
-        switch (c) {
+        p += len;
+
+        if (j + 6 >= max)
+            break;
+
+        switch (cp) {
         case '\"': out[j++] = '\\'; out[j++] = '\"'; break;
         case '\\': out[j++] = '\\'; out[j++] = '\\'; break;
         case '\n': out[j++] = '\\'; out[j++] = 'n';  break;
         case '\r': out[j++] = '\\'; out[j++] = 'r';  break;
         case '\t': out[j++] = '\\'; out[j++] = 't';  break;
         default:
-            if (c < 0x20)
-                j += snprintf(&out[j], maxlen - j, "\\u%04x", c);
+            if (cp < 0x20 || cp == 0x7f)
+                j += snprintf(out + j, max - j, "\\u%04x", cp);
             else
-                out[j++] = c;
+                j += utf8proc_encode_char(cp, (uint8_t *)(out + j));
         }
     }
+
     out[j] = '\0';
 }
 
-static int cobol_handler(r)
+static int
+cobol_handler(r)
     request_rec *r;
 {
     if (!r->handler || strcmp(r->handler, "cobol-server"))
@@ -52,7 +64,7 @@ static int cobol_handler(r)
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR, errno, r, "socket() failed");
-        ap_rprintf(r, "{\"status\":\"error\",\"msg\":\"socket error\"}\n");
+        ap_rputs("{\"status\":\"error\",\"msg\":\"socket error\"}\n", r);
         return OK;
     }
 
@@ -64,7 +76,7 @@ static int cobol_handler(r)
     if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR, errno, r, "connect(%s) failed", COBOL_SOCK_PATH);
         close(sock);
-        ap_rprintf(r, "{\"status\":\"error\",\"msg\":\"connect failed\"}\n");
+        ap_rputs("{\"status\":\"error\",\"msg\":\"connect failed\"}\n", r);
         return OK;
     }
 
@@ -75,17 +87,18 @@ static int cobol_handler(r)
     if (len > 0) {
         buf[len] = '\0';
         char escaped[BUFSIZE * 2] = {0};
-        safe_json_escape(escaped, buf, sizeof(escaped));
+        json_escape_utf8(escaped, buf, sizeof(escaped));
         ap_rprintf(r, "{\"status\":\"ok\",\"cobol\":\"%s\"}\n", escaped);
     } else {
         ap_log_rerror(APLOG_MARK, APLOG_ERR, errno, r, "read() failed");
-        ap_rprintf(r, "{\"status\":\"error\",\"msg\":\"read error\"}\n");
+        ap_rputs("{\"status\":\"error\",\"msg\":\"read error\"}\n", r);
     }
 
     return OK;
 }
 
-static void cobol_register_hooks(p)
+static void
+cobol_register_hooks(p)
     apr_pool_t *p;
 {
     ap_hook_handler(cobol_handler, NULL, NULL, APR_HOOK_MIDDLE);
