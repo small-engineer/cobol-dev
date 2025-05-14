@@ -25,10 +25,17 @@ services:
     container_name: cobol-server
     volumes:
       - cobol_socket:/var/run/cobol
+      - ./cobol/odbcinst.ini:/etc/odbcinst.ini:ro
     healthcheck:
       test: ["CMD", "test", "-S", "/var/run/cobol/cobol.sock"]
       interval: 5s
       retries: 5
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
   postgres:
     image: postgres:15

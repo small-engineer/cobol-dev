@@ -1,7 +1,17 @@
 $(function () {
   $("#run").on("click", function () {
+    const action = $("#action").val();
+    const params = $("#params").val();
+    const payload = action + "|" + params;
+
     $("#output").text("Running...");
-    $.get("/api/run-cobol")
+
+    $.ajax({
+      url: "/api/run-cobol",
+      type: "POST",
+      contentType: "text/plain",
+      data: payload,
+    })
       .done(function (data) {
         try {
           if (typeof data === "string") data = JSON.parse(data);

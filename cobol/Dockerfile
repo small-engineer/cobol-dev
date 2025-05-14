@@ -1,12 +1,22 @@
 FROM debian:stable-slim
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gnucobol socat && \
-    rm -rf /var/lib/apt/lists/*
+# ── Open-COBOL-ESQL をビルド ────────────────────────────
+COPY setup.sh /tmp/
+RUN chmod +x /tmp/setup.sh && /tmp/setup.sh && rm /tmp/setup.sh
 
+# ODBC ドライバ
+COPY odbcinst.ini /etc/odbcinst.ini
+
+# ESQL ランタイムソースの場所
+ENV OCESQL_SRC=/usr/local/share/ocesql/source
+
+# アプリ配置
 WORKDIR /work
-COPY main.cob /work/
-RUN cobc -x main.cob -o main
+COPY main.cob modules/ /work/
+
+# ビルドスクリプトをコピーして実行
+COPY build.sh /work/
+RUN chmod +x /work/build.sh && /work/build.sh
 
 CMD ["sh", "-c", \
      "rm -f /var/run/cobol/cobol.sock && \

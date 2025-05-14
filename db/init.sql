@@ -1,11 +1,16 @@
-CREATE DATABASE IF NOT EXISTS run_log
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS journal_entry (
+    id              SERIAL PRIMARY KEY,
+    entry_date      DATE NOT NULL,
+    debit_account   VARCHAR(50) NOT NULL,
+    credit_account  VARCHAR(50) NOT NULL,
+    amount          INTEGER NOT NULL CHECK (amount >= 0),
+    memo            TEXT
+);
 
-USE run_log;
+CREATE INDEX IF NOT EXISTS idx_journal_entry_date
+    ON journal_entry (entry_date);
 
-CREATE TABLE IF NOT EXISTS run_log (
-  id        INT AUTO_INCREMENT PRIMARY KEY,
-  run_time  DATETIME NOT NULL,
-  message   TEXT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO journal_entry (entry_date, debit_account, credit_account, amount, memo)
+VALUES 
+  ('2025-05-01', '現金', '売上', 10000, '売上計上'),
+  ('2025-05-02', '仕入', '現金', 5000, '仕入支払い');

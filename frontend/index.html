@@ -21,8 +21,15 @@
         font-size: 18px;
         padding: 8px;
       }
-      input.button {
+      input,
+      textarea,
+      select {
         font-size: 14px;
+        margin: 5px 0;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      input.button {
         padding: 4px 12px;
         background-color: #f0f0f0;
         border: 1px solid #666666;
@@ -41,8 +48,25 @@
       <table class="container" cellpadding="0" cellspacing="0">
         <tr>
           <td>
-            <h1>WEB interface</h1>
+            <h1>COBOL CRUD インターフェース</h1>
+
+            <label>アクション</label>
+            <select id="action">
+              <option value="create">create</option>
+              <option value="read">read</option>
+              <option value="update">update</option>
+              <option value="delete">delete</option>
+            </select>
+
+            <label>パラメータ（パイプ区切り）</label>
+            <textarea
+              id="params"
+              rows="3"
+              placeholder="例: 2025-05-13|現金|売上|15000|売上記録"
+            ></textarea>
+
             <input type="button" value="Run COBOL" class="button" id="run" />
+
             <pre id="output">RESULT</pre>
           </td>
         </tr>
